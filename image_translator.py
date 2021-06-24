@@ -95,6 +95,7 @@ def get_document_text_uri(uri):
 
     return paragraphs
 
+
 # Returns document bounds given an image
 def get_document_bounds(image_file, feature):
 
@@ -141,15 +142,13 @@ def translate_text(text="YOUR_TEXT_TO_TRANSLATE", project_id="YOUR_PROJECT_ID"):
 
     parent = f"projects/{project_id}/locations/{location}"
 
-    # Detail on supported types can be found here:
-    # https://cloud.google.com/translate/docs/supported-formats
     response = client.translate_text(
         request={
             "parent": parent,
             "contents": [text],
             "mime_type": "text/plain",  # mime types: text/plain, text/html
             "source_language_code": "en-US",
-            "target_language_code": "zh", # Chinese, but it can be any lanuage you want
+            "target_language_code": "zh", # Chinese, but it can be any supported language you want
         }
     )
 
@@ -163,15 +162,18 @@ def main():
 
     ####### Replace with your own #########
     infile = "test_image/test1_input.jpeg"
-    # image_uri = "https://storage.cloud.google.com/sam_mini_competition/test1_input.jpeg"
+    image_uri = "https://storage.cloud.google.com/sam_mini_competition/test1_input.jpeg"
     projectID = "mini-individual-competition"
     #######################################
 
     translated_text_list = []
 
     # photo -> detected text
-    text_to_translate = get_document_text(infile)
     # text_to_translate = get_document_text_uri(image_uri)
+    text_to_translate = get_document_text(infile)
+
+
+    ####### Debug print for text to translate #########
     # print (text_to_translate)
 
 
@@ -180,17 +182,20 @@ def main():
         translated_text = translate_text(text, projectID)
         translated_text_list.append(translated_text)
 
-    # print (translated_text_list[0])
+    ####### Debug print for translated text #########
+    # print (translated_text_list)
 
     bounds = get_document_bounds(infile, FeatureType.PARA)
+    ####### Debug print for the text location (first two sections) #########
+    # print (str(bounds[0].vertices[3].x) + "," + str(bounds[0].vertices[3].y))
+    # print (str(bounds[1].vertices[3].x) + "," + str(bounds[1].vertices[3].y))
+
     my_image = Image.open(infile)
 
     font = ImageFont.truetype("resources/arial-unicode-ms.ttf",20)
     image_editable = ImageDraw.Draw(my_image)
 
-    # print (str(bounds[0].vertices[0].x) + "," + str(bounds[0].vertices[0].y))
-    # print (str(bounds[1].vertices[0].x) + "," + str(bounds[1].vertices[0].y))
-
+    # Overlay the translated text to the paragraph location
     for i in range(0, len(bounds)):
             image_editable.text((bounds[i].vertices[3].x,bounds[i].vertices[3].y), translated_text_list[i], "red", font = font)
 
